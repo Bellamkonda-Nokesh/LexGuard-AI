@@ -12,7 +12,7 @@ export default function LandingPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
       <Navbar />
       <main>
         <Hero />
@@ -21,46 +21,47 @@ export default function LandingPage() {
         <Testimonials />
 
         {/* CTA Section */}
-        <section className="py-24 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-900/30 via-violet-900/20 to-transparent pointer-events-none" />
-          <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
-
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <section className="py-24 relative overflow-hidden" id="cta">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse 70% 60% at 50% 50%, var(--accent-glow), transparent 70%)',
+            }}
+          />
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <div className="w-16 h-16 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-glow-lg">
+              <div
+                className="w-16 h-16 mx-auto mb-8 rounded-2xl flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 0 40px rgba(99,102,241,0.35)' }}
+              >
                 <Shield className="w-8 h-8 text-white" />
               </div>
-
-              <h2 className="text-4xl md:text-5xl font-black mb-6">
+              <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: 'var(--text-primary)' }}>
                 Ready to{' '}
                 <span className="gradient-text">Know What You're Signing?</span>
               </h2>
-              <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
-                Upload your contract now and get a complete AI-powered risk analysis in under 30 seconds.
+              <p className="text-lg mb-10 max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
+                Upload your contract and get a complete AI-powered risk analysis in under 30 seconds.
                 No account required.
               </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => navigate('/analyze')}
-                  className="btn-primary flex items-center gap-2 text-base px-8 py-4"
-                  id="cta-analyze-btn"
-                >
-                  <Upload className="w-5 h-5" />
-                  Analyze Your Contract Free
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </div>
-
-              <p className="text-xs text-gray-500 mt-6">
-                Supports PDF, DOCX, and image formats. Max 20MB. Your files are processed securely and never stored without permission.
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate('/analyze')}
+                className="btn-primary text-base px-8 py-4"
+                id="cta-analyze-btn"
+              >
+                <Upload className="w-5 h-5" />
+                Analyze Your Contract — Free
+                <ArrowRight className="w-4 h-4" />
+              </motion.button>
+              <p className="text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
+                Supports PDF, DOCX, and image formats · Max 20MB · Files never stored
               </p>
             </motion.div>
           </div>
