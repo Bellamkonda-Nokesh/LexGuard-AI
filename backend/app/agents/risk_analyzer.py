@@ -8,7 +8,7 @@ import json
 import logging
 from typing import List, Dict, Any
 
-import google.generativeai as genai
+from app.agents.gemini_client import gemini_generate
 
 logger = logging.getLogger(__name__)
 
@@ -173,12 +173,6 @@ async def analyze_risks(clauses: List[dict], contract_type: str = "General Contr
 async def _analyze_with_gemini(clause: dict, contract_type: str, api_key: str) -> dict:
     """Call Gemini for risk analysis of a single clause."""
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(
-            "gemini-1.5-pro",
-            generation_config=genai.GenerationConfig(temperature=0.1, max_output_tokens=2048),
-        )
-
         prompt = RISK_PROMPT.format(
             contract_type=contract_type,
             title=clause.get("title", ""),
@@ -186,9 +180,11 @@ async def _analyze_with_gemini(clause: dict, contract_type: str, api_key: str) -
             clause_text=clause.get("raw_text", "")[:2000],
         )
 
-        response = model.generate_content(prompt)
-        raw = response.text.strip()
+        raw = gemini_generate(prompt, temperature=0.1, max_tokens=2048)
+        if not raw:
+            return MOCK_RISK_SCORES.get(clause.get("type", "general"), DEFAULT_RISK)
 
+        raw = raw.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):

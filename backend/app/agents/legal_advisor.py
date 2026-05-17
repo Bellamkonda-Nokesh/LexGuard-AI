@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Tuple
 
-import google.generativeai as genai
+from app.agents.gemini_client import gemini_generate
 
 logger = logging.getLogger(__name__)
 
@@ -152,12 +152,6 @@ async def advise_clauses(clauses: List[dict]) -> List[dict]:
 async def _get_advice_from_gemini(clause: dict, api_key: str) -> dict:
     """Get advice for a single clause from Gemini."""
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(
-            "gemini-1.5-pro",
-            generation_config=genai.GenerationConfig(temperature=0.3, max_output_tokens=2048),
-        )
-
         prompt = ADVISOR_PROMPT.format(
             title=clause.get("title", ""),
             severity=clause.get("severity", "MEDIUM"),
@@ -165,9 +159,11 @@ async def _get_advice_from_gemini(clause: dict, api_key: str) -> dict:
             risk_factors=", ".join(clause.get("risk_factors", [])),
         )
 
-        response = model.generate_content(prompt)
-        raw = response.text.strip()
+        raw = gemini_generate(prompt, temperature=0.3, max_tokens=2048)
+        if not raw:
+            return MOCK_ADVICE.get(clause.get("type", "general"), DEFAULT_ADVICE)
 
+        raw = raw.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):

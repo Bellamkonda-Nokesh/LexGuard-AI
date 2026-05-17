@@ -8,7 +8,7 @@ import logging
 import time
 from typing import List, Optional
 
-import google.generativeai as genai
+from app.agents.gemini_client import gemini_generate
 
 logger = logging.getLogger(__name__)
 
@@ -129,22 +129,12 @@ async def extract_clauses(contract_text: str) -> List[dict]:
     Agent 1: Extract all clauses from contract text.
     Returns list of raw clause dicts.
     """
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
+    if not os.getenv("GEMINI_API_KEY"):
         logger.warning("GEMINI_API_KEY not set — using mock clause extraction")
         return _get_mock_clauses(contract_text)
 
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(
-            "gemini-1.5-pro",
-            generation_config=genai.GenerationConfig(
-                temperature=0.1,
-                max_output_tokens=8192,
-            ),
-        )
-
-        # Truncate very long contracts
+        # Truncate very long contracts to stay within token limits
         text = contract_text[:15000] if len(contract_text) > 15000 else contract_text
 
         prompt = EXTRACTION_PROMPT.format(
@@ -152,10 +142,13 @@ async def extract_clauses(contract_text: str) -> List[dict]:
             contract_text=text,
         )
 
-        response = model.generate_content(prompt)
-        raw = response.text.strip()
+        raw = gemini_generate(prompt, temperature=0.1, max_tokens=8192)
+        if not raw:
+            logger.warning("Gemini returned empty response — using mock clauses")
+            return _get_mock_clauses(contract_text)
 
-        # Clean up JSON
+        raw = raw.strip()
+        # Strip markdown code fences if present
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
