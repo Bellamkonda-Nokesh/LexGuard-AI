@@ -177,7 +177,7 @@ export default function AnalysisPage() {
                     {analysis.processing_time_ms ? ` · ${(analysis.processing_time_ms / 1000).toFixed(1)}s analysis` : ''}
                   </p>
                 </div>
-                <ExportButton analysisId={analysis.analysis_id} filename={analysis.filename} />
+                <ExportButton analysisId={analysis.analysis_id} filename={analysis.filename} analysis={analysis} />
               </div>
 
               {/* Tab navigation */}

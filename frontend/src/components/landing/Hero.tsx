@@ -104,11 +104,10 @@ export default function Hero() {
   const { isDark } = useTheme()
 
   const TAGS = [
-    { label: 'Non-Compete Detected', color: '#ef4444', style: { top: '14%', right: '28%' } },
-    { label: 'Auto-Renewal Risk',    color: '#f97316', style: { top: '36%', right: '6%' } },
-    { label: 'IP Transfer Found',   color: '#eab308', style: { top: '56%', right: '24%' } },
-    { label: 'Arbitration Required', color: '#f97316', style: { bottom: '18%', right: '10%' } },
-    { label: 'Payment Terms Clear', color: '#22c55e', style: { bottom: '26%', left: '8%' } },
+    { label: 'Non-Compete Detected', color: '#ef4444', style: { top: '12%', right: '5%' } },
+    { label: 'Auto-Renewal Risk',    color: '#f97316', style: { top: '38%', right: '2%' } },
+    { label: 'IP Transfer Found',    color: '#eab308', style: { top: '60%', right: '8%' } },
+    { label: 'Arbitration Required', color: '#f97316', style: { bottom: '15%', right: '3%' } },
   ]
 
   return (

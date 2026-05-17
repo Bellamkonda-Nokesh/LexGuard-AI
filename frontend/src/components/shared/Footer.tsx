@@ -6,10 +6,9 @@ const PRODUCT_LINKS = [
   { label: 'Analyze Contract', href: '/analyze' },
   { label: 'Features', href: '/#features' },
   { label: 'How it Works', href: '/#how-it-works' },
-  { label: 'Pricing', href: '#' },
 ]
 
-const LEGAL_LINKS = ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Disclaimer']
+const LEGAL_LINKS = ['Privacy Policy', 'Terms of Service', 'Cookie Policy']
 
 const POWERED_BY = [
   { label: 'Google Gemini 1.5 Pro', color: '#4285F4' },
@@ -91,19 +90,19 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {LEGAL_LINKS.map(label => (
                 <li key={label}>
-                  <a
-                    href="#"
-                    className="text-sm transition-colors"
-                    style={{ color: 'var(--text-secondary)' }}
-                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
-                  >
+                  <span className="text-sm cursor-default" style={{ color: 'var(--text-secondary)' }}>
                     {label}
-                  </a>
+                  </span>
                 </li>
               ))}
+              <li>
+                <span className="text-xs italic" style={{ color: 'var(--text-muted)' }}>
+                  Coming soon
+                </span>
+              </li>
             </ul>
           </div>
+
 
           {/* Powered by */}
           <div>
