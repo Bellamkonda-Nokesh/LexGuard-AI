@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface-950 text-white font-sans antialiased;
+    background-image: radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-500 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-500;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
+  }
+
+  .card {
+    @apply bg-surface-800 border border-surface-600 rounded-2xl shadow-card;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300 hover:border-brand-500/30 hover:shadow-glow hover:-translate-y-0.5;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 
+           text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 
+           shadow-glow hover:shadow-glow-lg active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply glass border border-white/10 hover:border-brand-500/40 text-white font-medium 
+           px-6 py-3 rounded-xl transition-all duration-200 hover:bg-white/10;
+  }
+
+  .badge-low {
+    @apply bg-risk-low-bg text-risk-low border border-risk-low/30 text-xs font-semibold 
+           px-2.5 py-1 rounded-full;
+  }
+
+  .badge-medium {
+    @apply bg-risk-medium-bg text-risk-medium border border-risk-medium/30 text-xs font-semibold 
+           px-2.5 py-1 rounded-full;
+  }
+
+  .badge-high {
+    @apply bg-risk-high-bg text-risk-high border border-risk-high/30 text-xs font-semibold 
+           px-2.5 py-1 rounded-full;
+  }
+
+  .badge-critical {
+    @apply bg-risk-critical-bg text-risk-critical border border-risk-critical/30 text-xs font-semibold 
+           px-2.5 py-1 rounded-full;
+  }
+
+  .skeleton {
+    @apply bg-surface-600 rounded animate-pulse;
+    background: linear-gradient(
+      90deg,
+      rgba(30, 30, 48, 0.8) 25%,
+      rgba(50, 50, 80, 0.8) 50%,
+      rgba(30, 30, 48, 0.8) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent;
+  }
+
+  .section-title {
+    @apply text-4xl md:text-5xl font-bold gradient-text mb-4;
+  }
+
+  .highlight-low {
+    @apply bg-risk-low/20 border-b-2 border-risk-low cursor-pointer rounded-sm transition-all 
+           hover:bg-risk-low/30;
+  }
+
+  .highlight-medium {
+    @apply bg-risk-medium/20 border-b-2 border-risk-medium cursor-pointer rounded-sm transition-all 
+           hover:bg-risk-medium/30;
+  }
+
+  .highlight-high {
+    @apply bg-risk-high/20 border-b-2 border-risk-high cursor-pointer rounded-sm transition-all 
+           hover:bg-risk-high/30;
+  }
+
+  .highlight-critical {
+    @apply bg-risk-critical/20 border-b-2 border-risk-critical cursor-pointer rounded-sm transition-all 
+           hover:bg-risk-critical/30;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animated-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* Progress bar animation */
+.progress-bar {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Risk score ring */
+.risk-ring {
+  stroke-dasharray: 251.2;
+  stroke-dashoffset: 251.2;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
