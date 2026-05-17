@@ -1,216 +1,175 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Filter, ChevronDown, ChevronUp, ExternalLink, Shield, AlertOctagon, AlertTriangle, Info, CheckCircle } from 'lucide-react'
-import type { Clause, RiskLevel } from '@/types'
-import { getRiskBadgeClass, getRiskColor } from '@/lib/utils'
+import { Search, Filter, ChevronRight, AlertTriangle, TrendingUp, FileText, CheckCircle } from 'lucide-react'
 import { useAnalysisStore } from '@/store/analysisStore'
+import type { Clause } from '@/types'
+
+const SEVERITY_CONFIG = {
+  CRITICAL: { icon: AlertTriangle, color: '#ef4444', bg: 'rgba(239,68,68,0.1)', badge: 'badge-critical' },
+  HIGH: { icon: TrendingUp, color: '#f97316', bg: 'rgba(249,115,22,0.1)', badge: 'badge-high' },
+  MEDIUM: { icon: FileText, color: '#eab308', bg: 'rgba(234,179,8,0.08)', badge: 'badge-medium' },
+  LOW: { icon: CheckCircle, color: '#22c55e', bg: 'rgba(34,197,94,0.08)', badge: 'badge-low' },
+}
 
 interface Props {
   onClauseSelect: (clause: Clause) => void
 }
 
-const RISK_LEVELS: { label: string; value: 'ALL' | RiskLevel }[] = [
-  { label: 'All', value: 'ALL' },
-  { label: 'Critical', value: 'CRITICAL' },
-  { label: 'High', value: 'HIGH' },
-  { label: 'Medium', value: 'MEDIUM' },
-  { label: 'Low', value: 'LOW' },
-]
+export default function ClauseExplorer({ onClauseSelect }: Props) {
+  const { analysis, selectedClause, setSelectedClause } = useAnalysisStore()
+  const [search, setSearch] = useState('')
+  const [filterSev, setFilterSev] = useState<string>('ALL')
 
-const RiskIcon = ({ level }: { level: RiskLevel }) => {
-  const cls = 'w-4 h-4'
-  if (level === 'CRITICAL') return <AlertOctagon className={`${cls} text-red-400`} />
-  if (level === 'HIGH') return <AlertTriangle className={`${cls} text-orange-400`} />
-  if (level === 'MEDIUM') return <Info className={`${cls} text-amber-400`} />
-  return <CheckCircle className={`${cls} text-emerald-400`} />
-}
+  const clauses = useMemo(() => {
+    if (!analysis) return []
+    return analysis.clauses.filter(c => {
+      const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) ||
+        c.raw_text.toLowerCase().includes(search.toLowerCase())
+      const matchSev = filterSev === 'ALL' || c.severity === filterSev
+      return matchSearch && matchSev
+    }).sort((a, b) => {
+      const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
+      return (order[a.severity] ?? 4) - (order[b.severity] ?? 4)
+    })
+  }, [analysis, search, filterSev])
 
-function ClauseListItem({ clause, isSelected, onClick }: {
-  clause: Clause
-  isSelected: boolean
-  onClick: () => void
-}) {
-  const [expanded, setExpanded] = useState(false)
+  const counts = useMemo(() => {
+    if (!analysis) return {}
+    return analysis.clauses.reduce((acc, c) => {
+      acc[c.severity] = (acc[c.severity] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+  }, [analysis])
+
+  const handleSelect = (clause: Clause) => {
+    setSelectedClause(clause)
+    onClauseSelect(clause)
+  }
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className={`card transition-all duration-200 cursor-pointer ${
-        isSelected ? 'border-brand-500/50 shadow-glow' : 'hover:border-surface-400'
-      }`}
-      onClick={onClick}
-    >
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <RiskIcon level={clause.severity} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 className="text-sm font-semibold text-white leading-tight">{clause.title}</h4>
-              <span className={getRiskBadgeClass(clause.severity)} style={{ whiteSpace: 'nowrap' }}>
-                {clause.severity}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mb-2">{clause.type}</p>
-            <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">{clause.plain_explanation}</p>
-          </div>
-        </div>
-
-        {/* Confidence bar */}
-        <div className="mt-3 flex items-center gap-2">
-          <span className="text-xs text-gray-500">Confidence</span>
-          <div className="flex-1 h-1 bg-surface-600 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all"
-              style={{
-                width: `${clause.confidence_score * 100}%`,
-                background: getRiskColor(clause.severity),
-              }}
-            />
-          </div>
-          <span className="text-xs font-mono" style={{ color: getRiskColor(clause.severity) }}>
-            {Math.round(clause.confidence_score * 100)}%
+    <div className="card-premium flex flex-col h-full" style={{ maxHeight: '70vh' }}>
+      {/* Header */}
+      <div className="p-4 space-y-3" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+            Clause Explorer
+          </h3>
+          <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8' }}>
+            {clauses.length} shown
           </span>
         </div>
 
-        {/* Expand button */}
-        <div className="flex items-center gap-2 mt-3">
-          <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-brand-300 transition-colors"
-          >
-            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            {expanded ? 'Less' : 'View Details'}
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onClick() }}
-            className="ml-auto flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            Full Analysis
-          </button>
-        </div>
-
-        {/* Expanded content */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
-                {/* Clause text */}
-                <div>
-                  <p className="text-xs font-medium text-gray-400 mb-1">Clause Text</p>
-                  <blockquote className="text-xs text-gray-300 bg-surface-700 rounded-lg p-3 leading-relaxed border-l-2 border-brand-500/50 font-mono">
-                    "{clause.raw_text.length > 300 ? clause.raw_text.slice(0, 300) + '...' : clause.raw_text}"
-                  </blockquote>
-                </div>
-
-                {/* Real-world consequence */}
-                <div>
-                  <p className="text-xs font-medium text-gray-400 mb-1">⚠️ Real-World Consequence</p>
-                  <p className="text-xs text-gray-300 leading-relaxed">{clause.real_world_consequence}</p>
-                </div>
-
-                {/* Negotiation */}
-                <div>
-                  <p className="text-xs font-medium text-gray-400 mb-1">💡 Negotiation Strategy</p>
-                  <p className="text-xs text-gray-300 leading-relaxed">{clause.negotiation_strategy}</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
-  )
-}
-
-export default function ClauseExplorer({ onClauseSelect }: Props) {
-  const { filter, setFilter, filteredClauses, selectedClause } = useAnalysisStore()
-  const clauses = filteredClauses()
-
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-brand-400" />
-          <h3 className="text-sm font-semibold text-white">Clause Explorer</h3>
-          <span className="text-xs text-gray-500">({clauses.length} clauses)</span>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             placeholder="Search clauses..."
-            value={filter.search}
-            onChange={(e) => setFilter({ search: e.target.value })}
-            className="w-full bg-surface-800 border border-surface-500 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 transition-colors"
-            aria-label="Search clauses"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="input-glass w-full pl-8 pr-4 py-2 text-xs"
           />
         </div>
 
-        {/* Level filter */}
+        {/* Severity filters */}
         <div className="flex gap-1.5 flex-wrap">
-          {RISK_LEVELS.map((lvl) => (
-            <button
-              key={lvl.value}
-              onClick={() => setFilter({ level: lvl.value })}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                filter.level === lvl.value
-                  ? 'bg-brand-500 text-white shadow-glow'
-                  : 'glass text-gray-400 hover:text-white hover:border-brand-500/30'
-              }`}
-              aria-pressed={filter.level === lvl.value}
-            >
-              {lvl.label}
-            </button>
-          ))}
+          {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(sev => {
+            const cfg = SEVERITY_CONFIG[sev as keyof typeof SEVERITY_CONFIG]
+            const isActive = filterSev === sev
+            return (
+              <button
+                key={sev}
+                onClick={() => setFilterSev(sev)}
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: isActive ? (cfg?.bg || 'rgba(99,102,241,0.12)') : 'var(--bg-card)',
+                  color: isActive ? (cfg?.color || '#818cf8') : 'var(--text-muted)',
+                  border: `1px solid ${isActive ? (cfg?.color + '35' || 'rgba(99,102,241,0.3)') : 'var(--border)'}`,
+                }}
+              >
+                {sev === 'ALL' ? `All (${analysis?.clauses.length || 0})` : `${sev} (${counts[sev] || 0})`}
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {/* Filter icon */}
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <Filter className="w-3.5 h-3.5" />
-        Showing {clauses.length} clause{clauses.length !== 1 ? 's' : ''}
-        {filter.level !== 'ALL' && ` with ${filter.level} severity`}
-        {filter.search && ` matching "${filter.search}"`}
-      </div>
-
-      {/* Clause list */}
-      <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+      {/* Clause List */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         <AnimatePresence>
-          {clauses.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12 text-gray-500"
-            >
-              <Shield className="w-8 h-8 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No clauses match your filter.</p>
-            </motion.div>
-          ) : (
-            clauses.map((clause) => (
-              <ClauseListItem
+          {clauses.map((clause, i) => {
+            const cfg = SEVERITY_CONFIG[clause.severity as keyof typeof SEVERITY_CONFIG]
+            const Icon = cfg?.icon || FileText
+            const isSelected = selectedClause?.id === clause.id
+
+            return (
+              <motion.button
                 key={clause.id}
-                clause={clause}
-                isSelected={selectedClause?.id === clause.id}
-                onClick={() => onClauseSelect(clause)}
-              />
-            ))
-          )}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ delay: i * 0.03 }}
+                onClick={() => handleSelect(clause)}
+                className="w-full text-left rounded-xl p-3.5 flex items-start gap-3 transition-all"
+                style={{
+                  background: isSelected
+                    ? `${cfg?.color || '#6366f1'}12`
+                    : 'var(--bg-card)',
+                  border: `1px solid ${isSelected ? (cfg?.color + '30' || 'var(--border-hover)') : 'var(--border)'}`,
+                  boxShadow: isSelected ? `0 0 0 1px ${cfg?.color}20` : 'none',
+                }}
+                onMouseEnter={e => {
+                  if (!isSelected) e.currentTarget.style.background = 'var(--bg-card-hover)'
+                }}
+                onMouseLeave={e => {
+                  if (!isSelected) e.currentTarget.style.background = 'var(--bg-card)'
+                }}
+              >
+                {/* Icon */}
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: cfg?.bg || 'rgba(99,102,241,0.1)' }}
+                >
+                  <Icon className="w-4 h-4" style={{ color: cfg?.color || '#818cf8' }} />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                      {clause.title}
+                    </span>
+                    <ChevronRight
+                      className="w-3.5 h-3.5 flex-shrink-0 transition-transform"
+                      style={{
+                        color: 'var(--text-muted)',
+                        transform: isSelected ? 'translateX(2px)' : 'none',
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={cfg?.badge || 'badge-low'}>{clause.severity}</span>
+                    <span className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
+                      {clause.type.replace(/-/g, ' ')}
+                    </span>
+                  </div>
+                  {clause.plain_explanation && (
+                    <p className="text-[11px] mt-1.5 leading-relaxed line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+                      {clause.plain_explanation}
+                    </p>
+                  )}
+                </div>
+              </motion.button>
+            )
+          })}
         </AnimatePresence>
+
+        {clauses.length === 0 && (
+          <div className="py-12 text-center">
+            <Search className="w-8 h-8 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No clauses match your filter</p>
+          </div>
+        )}
       </div>
     </div>
   )

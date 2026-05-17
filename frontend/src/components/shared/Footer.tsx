@@ -1,64 +1,131 @@
-import { Shield, Github, Twitter, Linkedin } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Shield, Github, Twitter, Linkedin, Heart, Zap } from 'lucide-react'
+import { useTheme } from '@/context/ThemeContext'
 
 export default function Footer() {
+  const { isDark } = useTheme()
+
   return (
-    <footer className="border-t border-white/5 bg-surface-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="col-span-1 md:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-glow">
-                <Shield className="w-4 h-4 text-white" />
+    <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          {/* Brand */}
+          <div className="md:col-span-1">
+            <Link to="/" className="flex items-center gap-2.5 mb-4">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+              >
+                <Shield className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-lg">Lex<span className="gradient-text">Guard</span> AI</span>
+              <span className="font-black text-base" style={{ color: 'var(--text-primary)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                LexGuard AI
+              </span>
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+            <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>
               Know what you're signing before you sign it. AI-powered contract intelligence for everyone.
             </p>
-            <div className="flex gap-3 mt-6">
-              <a href="#" aria-label="GitHub" className="w-8 h-8 glass rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <Github className="w-4 h-4" />
-              </a>
-              <a href="#" aria-label="Twitter" className="w-8 h-8 glass rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <Twitter className="w-4 h-4" />
-              </a>
-              <a href="#" aria-label="LinkedIn" className="w-8 h-8 glass rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                <Linkedin className="w-4 h-4" />
-              </a>
+            <div className="flex items-center gap-2">
+              {[
+                { icon: Github, href: 'https://github.com/Bellamkonda-Nokesh/LexGuard-AI', label: 'GitHub' },
+                { icon: Twitter, href: '#', label: 'Twitter' },
+                { icon: Linkedin, href: '#', label: 'LinkedIn' },
+              ].map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#6366f1'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+                >
+                  <Icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
           </div>
 
+          {/* Product */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Product</h3>
-            <ul className="space-y-2">
-              {['Analyze Contract', 'Features', 'How it Works', 'Pricing'].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-gray-400 hover:text-white transition-colors">{item}</a>
+            <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Product</div>
+            <ul className="space-y-2.5">
+              {[
+                { label: 'Analyze Contract', href: '/analyze' },
+                { label: 'Features', href: '/#features' },
+                { label: 'How it Works', href: '/#how-it-works' },
+                { label: 'Pricing', href: '#' },
+              ].map(({ label, href }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    className="text-sm transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+                  >
+                    {label}
+                  </a>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Legal */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Legal</h3>
-            <ul className="space-y-2">
-              {['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Disclaimer'].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-gray-400 hover:text-white transition-colors">{item}</a>
+            <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Legal</div>
+            <ul className="space-y-2.5">
+              {['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Disclaimer'].map(label => (
+                <li key={label}>
+                  <a
+                    href="#"
+                    className="text-sm transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+                  >
+                    {label}
+                  </a>
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Powered by */}
+          <div>
+            <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Powered By</div>
+            <div className="space-y-2.5">
+              {[
+                { label: 'Google Gemini 1.5 Pro', color: '#4285F4' },
+                { label: 'Google Cloud Run', color: '#34A853' },
+                { label: 'FastAPI Backend', color: '#009688' },
+                { label: 'React + Vite', color: '#61DAFB' },
+              ].map(({ label, color }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="border-t border-white/5 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-500">
-            © 2026 LexGuard AI. Built with Gemini 1.5 Pro + Google Cloud.
+        {/* Bottom bar */}
+        <div
+          className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-12 pt-6"
+          style={{ borderTop: '1px solid var(--border)' }}
+        >
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            © 2026 LexGuard AI · Built with{' '}
+            <Heart className="w-3 h-3 inline text-red-400" />
+            {' '}using Gemini 1.5 Pro + Google Cloud
           </p>
-          <p className="text-xs text-gray-500">
-            ⚠️ Not a substitute for professional legal advice.
-          </p>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)' }}>
+            <Zap className="w-3 h-3" style={{ color: '#eab308' }} />
+            <span className="text-xs font-medium" style={{ color: '#ca8a04' }}>Not a substitute for professional legal advice</span>
+          </div>
         </div>
       </div>
     </footer>
