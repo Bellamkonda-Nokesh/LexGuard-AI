@@ -5,7 +5,7 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci --silent && chmod -R +x node_modules/.bin/
+RUN npm ci --silent
 
 COPY frontend/ ./
 RUN npm run build

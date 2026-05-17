@@ -1,0 +1,15 @@
+# Never ship node_modules — Docker installs fresh
+frontend/node_modules/
+frontend/dist/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/tests/__pycache__/
+**/__pycache__/
+**/*.pyc
+.git/
+.gitignore
+*.md
+.env
+.env.*
+!.env.example
+backend/static/
