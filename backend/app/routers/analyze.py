@@ -1,6 +1,7 @@
 import os
 import uuid
 import time
+import asyncio
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,12 +25,24 @@ limiter = Limiter(key_func=get_remote_address)
 
 UPLOAD_DIR = Path("/tmp/lexguard_uploads")
 
-# In-memory storage for analyses (use Firestore/Redis in production)
-_analyses: dict = {}
+# In-memory analysis cache — keyed by analysis_id
+# Replace with Firestore/Redis for persistent multi-instance deployments
+_analyses: dict[str, ContractAnalysis] = {}
 
 
 def _find_file(file_id: str) -> Optional[Path]:
-    """Find uploaded file by ID."""
+    """
+    Locate an uploaded file by its UUID file_id.
+
+    Scans the upload directory for any supported extension suffix
+    matching the given ID. Returns None if no match is found.
+
+    Args:
+        file_id: UUID string assigned at upload time.
+
+    Returns:
+        Path to the file if found, or None.
+    """
     for ext in [".pdf", ".docx", ".doc", ".png", ".jpg", ".jpeg"]:
         path = UPLOAD_DIR / f"{file_id}{ext}"
         if path.exists():
@@ -38,7 +51,20 @@ def _find_file(file_id: str) -> Optional[Path]:
 
 
 def _parse_document(file_path: Path) -> str:
-    """Parse document based on file type."""
+    """
+    Dispatch document parsing based on file extension.
+
+    Supports: PDF (PyMuPDF), DOCX (python-docx), image (Cloud Vision OCR).
+
+    Args:
+        file_path: Absolute path to the uploaded file.
+
+    Returns:
+        Extracted plain text content of the document.
+
+    Raises:
+        ValueError: If the file extension is not in the supported set.
+    """
     suffix = file_path.suffix.lower()
     if suffix == ".pdf":
         return parse_pdf(str(file_path))
@@ -46,14 +72,33 @@ def _parse_document(file_path: Path) -> str:
         return parse_docx(str(file_path))
     elif suffix in (".png", ".jpg", ".jpeg"):
         return parse_image_ocr(str(file_path))
-    else:
-        raise ValueError(f"Unsupported file type: {suffix}")
+    raise ValueError(f"Unsupported file type: {suffix}")
 
 
 @router.post("/analyze", response_model=ContractAnalysis)
 @limiter.limit("10/minute")
-async def analyze_contract(request: Request, body: AnalyzeRequest):
-    """Run the 3-agent AI pipeline on an uploaded contract."""
+async def analyze_contract(request: Request, body: AnalyzeRequest) -> ContractAnalysis:
+    """
+    Execute the 3-agent AI pipeline on an uploaded contract.
+
+    Pipeline stages:
+      1. Document Parser  — extract raw text from PDF/DOCX/image
+      2. Clause Extractor — identify and classify 12+ clause types (Agent 1)
+      3. Risk Analyzer    — score each clause CRITICAL→LOW (Agent 2)
+      4. Legal Advisor    — plain-English explanations + negotiation tips (Agent 3)
+      5. Report Builder   — assemble ContractAnalysis response object
+
+    Args:
+        request: FastAPI Request (required by slowapi rate limiter).
+        body:    AnalyzeRequest containing the uploaded file_id.
+
+    Returns:
+        ContractAnalysis — full structured risk report.
+
+    Raises:
+        HTTPException 404: File not found for given file_id.
+        HTTPException 500: Unrecoverable pipeline failure.
+    """
     start_time = time.time()
 
     # Find uploaded file
@@ -100,12 +145,13 @@ async def analyze_contract(request: Request, body: AnalyzeRequest):
         )
         agent_timeline[2] = AgentStep(agent="Risk Analyzer", status=AgentStatus.RUNNING, message="Scoring risks...")
 
-        # Step 3: Analyze risks (Agent 2)
+        # Step 3 & 4: Risk analysis + advice can be pipelined
+        # Risk analyzer must run before advisor (depends on scored clauses)
         t2 = time.time()
         risk_clauses = await analyze_risks(raw_clauses, contract_text)
         agent_timeline[2] = AgentStep(
             agent="Risk Analyzer", status=AgentStatus.COMPLETE,
-            message="Risk analysis complete",
+            message=f"Scored {len(risk_clauses)} clauses",
             duration_ms=(time.time() - t2) * 1000,
         )
         agent_timeline[3] = AgentStep(agent="Legal Advisor", status=AgentStatus.RUNNING, message="Generating advice...")
@@ -177,8 +223,19 @@ async def analyze_contract(request: Request, body: AnalyzeRequest):
 
 
 @router.get("/analysis/{analysis_id}", response_model=ContractAnalysis)
-async def get_analysis(analysis_id: str):
-    """Retrieve a previous analysis by ID."""
+async def get_analysis(analysis_id: str) -> ContractAnalysis:
+    """
+    Retrieve a previously completed analysis by its UUID.
+
+    Args:
+        analysis_id: UUID string returned by the /analyze endpoint.
+
+    Returns:
+        ContractAnalysis — the full stored risk report.
+
+    Raises:
+        HTTPException 404: No analysis found for this ID.
+    """
     if analysis_id not in _analyses:
         raise HTTPException(status_code=404, detail="Analysis not found")
     return _analyses[analysis_id]
