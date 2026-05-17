@@ -138,8 +138,8 @@ def _generate_pdf_report(analysis) -> bytes:
 
             story.append(Paragraph(f"■ {clause.title}", h2_style))
             story.append(Paragraph(
-                f"<font color='#{c_color.hexval()[1:]}'><b>Risk Level: {clause.severity}</b></font>"
-                f" · Type: {clause.type} · Confidence: {int(clause.confidence_score*100)}%",
+                f"<font color='{c_color.hexval()}'><b>Risk Level: {str(clause.severity).split('.')[-1]}</b></font>"
+                f" \xb7 Type: {clause.type} \xb7 Confidence: {int(clause.confidence_score*100)}%",
                 small_style,
             ))
 

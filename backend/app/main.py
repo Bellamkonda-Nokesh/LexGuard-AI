@@ -141,8 +141,8 @@ if static_dir.exists():
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
 
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_frontend(full_path: str, request: Request) -> FileResponse | dict:
+    @app.get("/{full_path:path}", include_in_schema=False, response_model=None)
+    async def serve_frontend(full_path: str, request: Request):
         """
         Catch-all route that serves the React SPA for all non-API paths.
 

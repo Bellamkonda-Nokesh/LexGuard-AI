@@ -12,8 +12,8 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Default model — can be overridden via environment variable
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-pro")
+# Default model — gemini-2.0-flash is fast and widely available on current API
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 
 def gemini_generate(prompt: str, temperature: float = 0.1, max_tokens: int = 8192) -> Optional[str]:
