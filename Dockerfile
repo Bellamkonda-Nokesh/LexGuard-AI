@@ -35,11 +35,12 @@ COPY backend/ ./
 # Copy built frontend into static/
 COPY --from=frontend-builder /app/frontend/dist ./static
 
-# Create uploads directory
-RUN mkdir -p /tmp/lexguard_uploads
-
-# Non-root user for security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Create uploads directory and grant appuser access
+RUN useradd -m -u 1000 appuser \
+    && chown -R appuser:appuser /app \
+    && mkdir -p /tmp/lexguard_uploads \
+    && chown -R appuser:appuser /tmp/lexguard_uploads \
+    && chmod 755 /tmp/lexguard_uploads
 USER appuser
 
 # Cloud Run port
